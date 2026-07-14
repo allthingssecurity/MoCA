@@ -84,7 +84,7 @@ def main() -> None:
               if not c.get("error")}
 
     L = []
-    L.append("# MoCA — Results\n")
+    L.append("# MoCA, Results\n")
     L.append(f"Generated from `data/*.json`. Seed `{SEED}`. "
              f"Bootstrap resamples: {BOOTSTRAP:,}.\n")
 
@@ -109,13 +109,13 @@ def main() -> None:
             if not n:
                 continue
             lo, hi = wilson(k, n)
-            L.append(f"| `{a}` | {k}/{n} | {k/n:.0%} | {lo:.0%} – {hi:.0%} |")
+            L.append(f"| `{a}` | {k}/{n} | {k/n:.0%} | {lo:.0%}, {hi:.0%} |")
         L.append("\n> With n of this size the intervals overlap heavily. Treat any "
                  "correctness difference between arms as **unresolved** unless the "
                  "intervals are disjoint.\n")
 
     # ---- cost --------------------------------------------------------------
-    L.append("\n## Cost (shadow-priced — see README; neither account is billed per token)\n")
+    L.append("\n## Cost (shadow-priced, see README; neither account is billed per token)\n")
     L.append("| Arm | Mean $/task | vs baseline | 95% CI on the difference |")
     L.append("|---|---|---|---|")
     for a in arms:
@@ -124,7 +124,7 @@ def main() -> None:
             continue
         mean = stats.fmean(xs)
         if a == baseline:
-            L.append(f"| `{a}` | ${mean:.4f} | — (baseline) | — |")
+            L.append(f"| `{a}` | ${mean:.4f} |, (baseline) |, |")
             continue
         shared = sorted(set(cost_by[baseline]) & set(cost_by[a]))
         pairs = [(cost_by[baseline][i], cost_by[a][i]) for i in shared]
@@ -132,13 +132,13 @@ def main() -> None:
         base_mean = stats.fmean([p[0] for p in pairs]) or 1
         verdict = ("**not significant** (CI spans $0)" if lo < 0 < hi
                    else f"**{pt/base_mean:+.0%}**")
-        L.append(f"| `{a}` | ${mean:.4f} | {verdict} | ${lo:+.4f} – ${hi:+.4f} |")
+        L.append(f"| `{a}` | ${mean:.4f} | {verdict} | ${lo:+.4f}, ${hi:+.4f} |")
     L.append(f"\n> Paired over the {len(set(cost_by[baseline]))} instances every arm "
              "attempted. Pairing removes between-task variance, which dominates here.\n")
 
     # ---- quality -----------------------------------------------------------
     if any(qual_by.values()):
-        L.append("\n## Quality (blind LLM judge, 1–10 'would I merge this')\n")
+        L.append("\n## Quality (blind LLM judge, 1-10 'would I merge this')\n")
         L.append("Arm labels stripped and shuffled per instance; judge had no tools "
                  "and could not look up the upstream fix.\n")
         L.append("| Arm | Mean overall | vs baseline | 95% CI on the difference |")
@@ -149,14 +149,14 @@ def main() -> None:
                 continue
             mean = stats.fmean(xs)
             if a == baseline:
-                L.append(f"| `{a}` | {mean:.2f} | — (baseline) | — |")
+                L.append(f"| `{a}` | {mean:.2f} |, (baseline) |, |")
                 continue
             shared = sorted(set(qual_by[baseline]) & set(qual_by[a]))
             pairs = [(qual_by[baseline][i], qual_by[a][i]) for i in shared]
             pt, lo, hi = paired_bootstrap(pairs)
             verdict = ("**not significant** (CI spans 0)" if lo < 0 < hi
                        else f"**{pt:+.2f} pts**")
-            L.append(f"| `{a}` | {mean:.2f} | {verdict} | {lo:+.2f} – {hi:+.2f} |")
+            L.append(f"| `{a}` | {mean:.2f} | {verdict} | {lo:+.2f}, {hi:+.2f} |")
         L.append("\n> This is the axis that matters most. Cheap delegation that "
                  "passes tests but drops quality is not a saving, it is a deferred "
                  "cost paid in code review.\n")
@@ -170,7 +170,7 @@ def main() -> None:
         if xs:
             L.append(f"| `{a}` | {stats.fmean(xs):.0f}s |")
     L.append("\n> Delegation adds round-trips. If MoCA is cheaper but materially "
-             "slower, that is a trade, not a free win — state it.\n")
+             "slower, that is a trade, not a free win, state it.\n")
 
     # ---- cost by difficulty: the routing question --------------------------
     diff_of = {r["instance_id"]: r["difficulty"] for r in cost}
@@ -194,13 +194,13 @@ def main() -> None:
                 qp = [(qual_by[baseline][i], qual_by["B_opus_codex_helper"][i])
                       for i in qids]
                 q_pt, q_lo, q_hi = paired_bootstrap(qp)
-                qtxt = f"{q_pt:+.2f} ({q_lo:+.2f}–{q_hi:+.2f})"
+                qtxt = f"{q_pt:+.2f} ({q_lo:+.2f}-{q_hi:+.2f})"
             else:
-                qtxt = "—"
+                qtxt = "-"
             L.append(f"| {d} | {len(ids)} | {c_pt/base:+.0%} "
-                     f"(${c_lo:+.3f}–${c_hi:+.3f}) | {qtxt} |")
+                     f"(${c_lo:+.3f}-${c_hi:+.3f}) | {qtxt} |")
         L.append("\n> If quality holds on the easy tiers and collapses on `1-4 hours`, "
-                 "the pattern works but the router does not — it is delegating "
+                 "the pattern works but the router does not, it is delegating "
                  "judgment it should have kept.\n")
 
     (ROOT / "RESULTS.md").write_text("\n".join(L) + "\n")

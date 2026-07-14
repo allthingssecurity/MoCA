@@ -1,0 +1,12 @@
+  skip psf__requests-2317: gold patch cannot resolve it here
+[A_opus_solo] astropy__astropy-7166 (<15 min fix)
+    cloning mirror astropy/astropy (once)…
+    -> ok=True 527B 47s
+[B_opus_codex_helper] astropy__astropy-7166 (<15 min fix)
+    -> ok=True 527B 149s
+[C_codex_solo] astropy__astropy-7166 (<15 min fix)
+    -> ok=True 527B 59s
+[A_opus_solo] django__django-13670 (15 min - 1 hour)
+    cloning mirror django/django (once)…
+    -> ok=True 523B 82s
+[B_opus_codex_helper] django__django-13670 (15 min - 1 hour)

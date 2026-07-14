@@ -63,7 +63,7 @@ def main() -> None:
     if "codex_home_" not in (gitignore.read_text() if gitignore.exists() else ""):
         sys.exit("REFUSING TO CONTINUE: harness/codex_home_*/ is not gitignored, "
                  "and it now contains a copy of your auth.json.")
-    print("\n  (auth.json copied into both homes; they are gitignored — keep it that way)")
+    print("\n  (auth.json copied into both homes; they are gitignored, keep it that way)")
 
 
 if __name__ == "__main__":

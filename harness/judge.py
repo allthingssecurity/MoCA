@@ -54,9 +54,9 @@ does it read like it was written by someone unfamiliar with the codebase?
   robustness  Does it handle the adjacent cases a maintainer would immediately \
 ask about, without over-engineering for cases that cannot occur?
 
-Then give overall = your honest "would I merge this" score, 1-10. overall is NOT \
-an average -- a patch can score well on every axis and still be unmergeable, or \
-be slightly rough and still obviously right.
+Then give overall = your "would I merge this" score, 1-10. overall is NOT an \
+average. A patch can score well on every axis and still be unmergeable, or be \
+slightly rough and still obviously right.
 
 An EMPTY patch means the system produced nothing. Score it 1 across the board.
 
