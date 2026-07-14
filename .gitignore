@@ -1,0 +1,40 @@
+# NOTE: .gitignore does NOT support trailing inline comments. A line like
+#   runs/   # per-run outputs
+# is parsed as a literal pattern including the spaces and the '#', matches
+# nothing, and silently commits the directory. Keep every comment on its own line.
+
+# ---------------------------------------------------------------------------
+# CREDENTIALS -- setup_codex_homes.py copies ~/.codex/auth.json into these dirs
+# so the pinned Codex homes can authenticate. NEVER commit them. Anyone cloning
+# this repo regenerates them by running setup_codex_homes.py.
+# ---------------------------------------------------------------------------
+harness/codex_home_*/
+
+# Environment
+.venv/
+__pycache__/
+*.pyc
+
+# Bulk artefacts: regenerable, and large (the repo mirrors run to hundreds of MB).
+data/mirrors/
+data/preds/
+runs/
+logs/
+
+# swebench writes its per-arm reports into the repo root.
+*.sidekick_*.json
+gold.gold_validation.json
+
+# Transient run output
+data/validate.out
+data/gold_validation.log
+
+# ---------------------------------------------------------------------------
+# Deliberately TRACKED, because these are the result:
+#   data/tasks.json         the seeded task selection
+#   data/usable.json        which instances survived gold validation
+#   data/correctness.json   SWE-bench resolve rates per arm
+#   data/quality.json       blind judge scores per arm
+#   data/cost.json          token + shadow-cost breakdown
+#   RESULTS.md
+# ---------------------------------------------------------------------------
