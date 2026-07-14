@@ -31,25 +31,18 @@ This repo answers that against a benchmark we do not control.
 
 ## Results
 
-> **Not yet available.** The harness is built and verified end-to-end; the 20×3
-> evaluation has not been run. A single pilot task is not a finding. This section
-> will be filled from `data/correctness.json`, `data/quality.json` and
-> `data/cost.json`, and will state error bars rather than hide them.
+**Not yet available.**
 
-Pilot signal only (**n = 1**, easiest difficulty tier, sidekick fully paid for —
-this is a smoke test of the rig, *not* a result):
+The harness is built and verified end-to-end. The 20×3 evaluation has not been
+run, so there is nothing here worth reading yet — and nothing will be published
+here until it has a **valid correctness signal, a blind quality signal, and stated
+error bars**.
 
-| | Opus solo | Opus + `gpt-5.4-mini` |
-|---|---|---|
-| Opus input tokens | 556,223 | **304,735** (−45%) |
-| Sidekick cost | — | $0.065 |
-| **Total (shadow-priced)** | **$0.7240** | **$0.5278** (−27%) |
-| Patch | 831 B | 831 B (identical) |
-| Wall clock | 95 s | **141 s (+48%)** |
-
-Delegation halved what Opus had to read, and absorbing that context cost the cheap
-model six cents. It was also **48% slower** — latency is a real cost of this
-pattern, not a footnote.
+When the run completes, `harness/report.py` generates [`RESULTS.md`](RESULTS.md)
+from `data/correctness.json`, `data/quality.json` and `data/cost.json`, with Wilson
+intervals on resolve rate and a paired bootstrap on cost and quality deltas. Any
+difference whose confidence interval spans zero will be reported as **not
+significant** rather than quoted as a point estimate.
 
 ---
 
