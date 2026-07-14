@@ -174,7 +174,7 @@ def main() -> None:
 
     # ---- cost by difficulty: the routing question --------------------------
     diff_of = {r["instance_id"]: r["difficulty"] for r in cost}
-    if "B_opus_codex_sidekick" in cost_by:
+    if "B_opus_codex_helper" in cost_by:
         L.append("\n## Does the router know what NOT to delegate?\n")
         L.append("The whole thesis. Delegation should win on mechanical work and "
                  "should back off on judgment-heavy work.\n")
@@ -182,16 +182,16 @@ def main() -> None:
         L.append("|---|---|---|---|")
         for d in ["<15 min fix", "15 min - 1 hour", "1-4 hours"]:
             ids = [i for i in cost_by[baseline] if diff_of.get(i) == d
-                   and i in cost_by["B_opus_codex_sidekick"]]
+                   and i in cost_by["B_opus_codex_helper"]]
             if not ids:
                 continue
-            cp = [(cost_by[baseline][i], cost_by["B_opus_codex_sidekick"][i]) for i in ids]
+            cp = [(cost_by[baseline][i], cost_by["B_opus_codex_helper"][i]) for i in ids]
             c_pt, c_lo, c_hi = paired_bootstrap(cp)
             base = stats.fmean([p[0] for p in cp]) or 1
             qids = [i for i in ids if i in qual_by.get(baseline, {})
-                    and i in qual_by.get("B_opus_codex_sidekick", {})]
+                    and i in qual_by.get("B_opus_codex_helper", {})]
             if qids:
-                qp = [(qual_by[baseline][i], qual_by["B_opus_codex_sidekick"][i])
+                qp = [(qual_by[baseline][i], qual_by["B_opus_codex_helper"][i])
                       for i in qids]
                 q_pt, q_lo, q_hi = paired_bootstrap(qp)
                 qtxt = f"{q_pt:+.2f} ({q_lo:+.2f}–{q_hi:+.2f})"

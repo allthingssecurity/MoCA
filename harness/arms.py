@@ -4,11 +4,11 @@ The comparison only means something if the arms differ in exactly one thing:
 who does the work. Everything else -- prompt, repo state, tool access, turn
 budget, leakage guards -- is held constant across arms.
 
-Arm C is not decoration. Without it, a sidekick win is indistinguishable from
+Arm C is not decoration. Without it, a helper win is indistinguishable from
 "this task never needed a frontier model in the first place".
 """
 
-SIDEKICK_MODEL = "gpt-5.4-mini"   # verified reachable on this ChatGPT-account auth
+HELPER_MODEL = "gpt-5.4-mini"   # verified reachable on this ChatGPT-account auth
 CODEX_SOLO_MODEL = "gpt-5.5"      # gpt-4o is NOT reachable: 400 on ChatGPT-account auth
 
 # The delegation policy. This IS the mechanism under test: the main agent should
@@ -16,26 +16,26 @@ CODEX_SOLO_MODEL = "gpt-5.5"      # gpt-4o is NOT reachable: 400 on ChatGPT-acco
 # review for itself. If the main agent just does the work, arm B collapses into
 # arm A and MoCA measures nothing.
 DELEGATION_POLICY = """\
-You have a sidekick: a cheaper coding agent reachable via the `codex` MCP tool \
-(and `codex-reply` to continue an existing sidekick thread by threadId).
+You have a helper: a cheaper coding agent reachable via the `codex` MCP tool \
+(and `codex-reply` to continue an existing helper thread by threadId).
 
 Operate as a delegator, not an implementer. Concretely:
 
 - DELEGATE by default. Bulk file reading, searching, mechanical edits, running \
-tests, and applying a plan you have already decided on all go to the sidekick.
+tests, and applying a plan you have already decided on all go to the helper.
 - DO NOT read files yourself unless you genuinely cannot decide without seeing \
-the exact text. Ask the sidekick to read and report back.
+the exact text. Ask the helper to read and report back.
 - KEEP for yourself: the plan, the interpretation of anything ambiguous in the \
-problem statement, and the final review of the sidekick's diff.
+problem statement, and the final review of the helper's diff.
 - REUSE the thread. After the first `codex` call you get a threadId. Use \
-`codex-reply` with that threadId for every follow-up so the sidekick keeps its \
-context and its cache stays warm. Spawning a fresh sidekick per step re-pays its \
+`codex-reply` with that threadId for every follow-up so the helper keeps its \
+context and its cache stays warm. Spawning a fresh helper per step re-pays its \
 full base-instruction overhead every time.
-- ESCALATE when it is not working. If the sidekick is going in circles or the \
+- ESCALATE when it is not working. If the helper is going in circles or the \
 task turns out to hinge on subtle judgment, take the work back and do it yourself. \
 Delegating judgment is how this pattern fails.
 
-The sidekick shares your working directory. It can edit files directly.
+The helper shares your working directory. It can edit files directly.
 """
 
 # Held constant across every arm.
@@ -64,19 +64,19 @@ ARMS = {
     "A_opus_solo": {
         "engine": "claude",
         "model": "opus",
-        "sidekick": None,
+        "helper": None,
         "label": "Opus 4.8 solo (baseline)",
     },
-    "B_opus_codex_sidekick": {
+    "B_opus_codex_helper": {
         "engine": "claude",
         "model": "opus",
-        "sidekick": SIDEKICK_MODEL,
-        "label": f"Opus 4.8 + {SIDEKICK_MODEL} sidekick (MoCA)",
+        "helper": HELPER_MODEL,
+        "label": f"Opus 4.8 + {HELPER_MODEL} helper (MoCA)",
     },
     "C_codex_solo": {
         "engine": "codex",
         "model": CODEX_SOLO_MODEL,
-        "sidekick": None,
+        "helper": None,
         "label": f"{CODEX_SOLO_MODEL} solo (control)",
     },
 }

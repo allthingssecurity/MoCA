@@ -22,7 +22,7 @@ runs/
 logs/
 
 # swebench writes its per-arm reports into the repo root.
-*.sidekick_*.json
+*.moca_*.json
 gold.gold_validation.json
 
 # Transient run output

@@ -4,7 +4,7 @@
 files, grepping, applying a plan you have already decided on, running tests — that
 work is mechanical, and it is where most of the tokens go.
 
-MoCA pairs a **frontier main agent** (Claude Opus 4.8) with a **cheaper sidekick
+MoCA pairs a **frontier main agent** (Claude Opus 4.8) with a **cheaper helper
 from a different vendor** (OpenAI `gpt-5.4-mini`, mounted over MCP through Codex).
 The main agent delegates the mechanical work and keeps three things for itself:
 the plan, the interpretation of anything ambiguous, and the review of what comes
@@ -12,10 +12,10 @@ back.
 
 Two properties distinguish this from "just use a cheaper model":
 
-- **Cross-vendor.** Main agent and sidekick come from different labs, with
+- **Cross-vendor.** Main agent and helper come from different labs, with
   independent context windows and independent prompt caches. Neither one's context
   growth charges the other.
-- **Persistent, pinned sidekick.** The sidekick is one long-lived thread reused via
+- **Persistent, pinned helper.** The helper is one long-lived thread reused via
   `codex-reply`, not a fresh agent per delegation. A *fresh* Codex session re-pays
   ~8–15k tokens of base instructions **every single time**; a reused thread pays it
   once, then reads from cache. That one fact largely decides whether the pattern
@@ -56,7 +56,7 @@ significant** rather than quoted as a point estimate.
 | **Docker**, running | SWE-bench grades patches in per-instance containers |
 | ~60 GB free disk | Eval images + bare repo mirrors |
 | **`claude`** CLI, logged in | Arms A and B |
-| **`codex`** CLI, logged in | Arm B (sidekick) and arm C |
+| **`codex`** CLI, logged in | Arm B (helper) and arm C |
 | `uv` (or `pip`) | Python env |
 
 Check both CLIs are authenticated before you start — a mid-run auth failure wastes
@@ -100,7 +100,7 @@ codex mcp-server -c model="gpt-5.4-mini"   ->  gpt-5.6-sol    (IGNORED)
 ```
 
 It falls back to your global `~/.codex/config.toml` default. If that default is a
-frontier model — mine was — the "cheap sidekick" arm quietly runs a *second
+frontier model — mine was — the "cheap helper" arm quietly runs a *second
 expensive model*, with no error. An isolated `CODEX_HOME` cannot be ignored, and
 `verify_arm()` aborts the run if the wrong model ever appears in the logs.
 
@@ -148,10 +148,10 @@ Artefacts land in:
 | Arm | What runs | What it controls for |
 |---|---|---|
 | `A_opus_solo` | Claude Code, Opus 4.8 | The baseline you pay for today |
-| `B_opus_codex_sidekick` | Opus 4.8 + `gpt-5.4-mini` sidekick | MoCA |
+| `B_opus_codex_helper` | Opus 4.8 + `gpt-5.4-mini` helper | MoCA |
 | `C_codex_solo` | Codex, `gpt-5.5` | **The arm that keeps us honest** |
 
-Arm C is not decoration. Without it, "the sidekick was cheaper and just as good"
+Arm C is not decoration. Without it, "the helper was cheaper and just as good"
 is indistinguishable from "this task never needed a frontier model at all."
 
 ### Task selection
@@ -159,9 +159,9 @@ is indistinguishable from "this task never needed a frontier model at all."
 20 instances from **SWE-bench Verified**, seed `20260714`, stratified by the
 dataset's own human difficulty labels:
 
-- 8 × `<15 min fix` — mechanical. The sidekick's best case.
+- 8 × `<15 min fix` — mechanical. The helper's best case.
 - 9 × `15 min – 1 hour` — medium.
-- 3 × `1–4 hours` — judgment. The sidekick's **worst** case.
+- 3 × `1–4 hours` — judgment. The helper's **worst** case.
 
 Capped at 5 tasks per repo (a naive random sample came out 75% Django).
 
@@ -193,7 +193,7 @@ comparison unit, labelled as such throughout.
   the judge has **no tools** and cannot look up the upstream fix. This catches the
   diff that goes green and that no maintainer would merge — the failure a cheap
   delegated model is most likely to produce.
-- **Cost** — shadow-priced tokens across both vendors, sidekick included.
+- **Cost** — shadow-priced tokens across both vendors, helper included.
 
 ---
 
@@ -205,8 +205,8 @@ why they abort the run instead of logging a warning.
 
 | Guard | The bug it prevents |
 |---|---|
-| **Model pin** via isolated `CODEX_HOME` | `mcp-server` ignores `-c model=` and silently runs a frontier model as the "cheap" sidekick |
-| **`cwd`-join on Codex session logs** | The sidekick is an MCP *subprocess*; its tokens never reach `claude -p`'s `total_cost_usd`. Reporting that gives an imaginary saving |
+| **Model pin** via isolated `CODEX_HOME` | `mcp-server` ignores `-c model=` and silently runs a frontier model as the "cheap" helper |
+| **`cwd`-join on Codex session logs** | The helper is an MCP *subprocess*; its tokens never reach `claude -p`'s `total_cost_usd`. Reporting that gives an imaginary saving |
 | **Disjoint token normalisation** | Codex's `input_tokens` *includes* cached tokens; Anthropic's are disjoint. Naive summing double-counts |
 | **`.git` destroyed post-checkout** | `git log --all` reaches the real fix commit sitting on another branch |
 | **Web tools denied / network off** | Every SWE-bench solution is a public GitHub PR. An agent with search measures retrieval, not skill |
@@ -219,8 +219,8 @@ why they abort the run instead of logging a warning.
 - **n = 20 is small.** Agent runs are high-variance; expect wide confidence
   intervals. They will be reported, not buried.
 - **Shadow pricing is a model, not money.** See above.
-- **One sidekick model, one main model.** The tiered-router idea (route *per task*
-  across several sidekick tiers) is not yet tested — MoCA currently pins one
-  sidekick for the whole run.
+- **One helper model, one main model.** The tiered-router idea (route *per task*
+  across several helper tiers) is not yet tested — MoCA currently pins one
+  helper for the whole run.
 - **Python-only.** SWE-bench Verified is entirely Python repos. Nothing here says
   anything about MoCA on Go, TypeScript, or Rust.

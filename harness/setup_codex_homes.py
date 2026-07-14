@@ -8,7 +8,7 @@ Verified empirically:
     codex mcp-server -c model="gpt-5.4-mini"   -> model: gpt-5.6-sol    (IGNORED)
 
 The mcp-server silently fell back to the user's global config.toml default, which
-is a frontier model. That turned the "cheap sidekick" arm into a second expensive
+is a frontier model. That turned the "cheap helper" arm into a second expensive
 model without any error -- and it would have quietly invalidated the whole result.
 
 An isolated CODEX_HOME with its own config.toml cannot be ignored. It also keeps
@@ -29,7 +29,7 @@ HARNESS = Path(__file__).resolve().parent
 USER_CODEX = Path.home() / ".codex"
 
 HOMES = {
-    "codex_home_sidekick": {"model": "gpt-5.4-mini", "effort": "low"},
+    "codex_home_helper": {"model": "gpt-5.4-mini", "effort": "low"},
     "codex_home_solo":     {"model": "gpt-5.5",      "effort": "medium"},
 }
 

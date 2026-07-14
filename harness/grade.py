@@ -56,16 +56,21 @@ def grade(arm: str, workers: int) -> dict:
     if not preds_path:
         return {"arm": arm, "error": "no runs"}
 
-    run_id = f"sidekick_{arm}"
+    run_id = f"moca_{arm}"
     cmd = [
         sys.executable, "-m", "swebench.harness.run_evaluation",
         "--dataset_name", DATASET,
         "--predictions_path", str(preds_path),
         "--run_id", run_id,
         "--max_workers", str(workers),
-        # Native arm64 eval images exist -- no x86 emulation penalty.
         "--namespace", "swebench",
     ]
+    # NOTE: swebench 4.1.0 hardcodes arch="x86_64" in make_test_spec and exposes no
+    # flag for it, so on Apple Silicon these run under emulation. Native arm64 images
+    # DO exist and would be several times faster -- we deliberately do not use them.
+    # x86_64 is the architecture every published SWE-bench number is produced on, and
+    # arch differences bite exactly where this benchmark lives (float precision in
+    # sympy / numpy / matplotlib). Slow and canonical beats fast and novel.
     print(f"  grading {arm} …", flush=True)
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     (RUNS / arm / "grade.log").write_text(proc.stdout + "\n--- stderr ---\n" + proc.stderr)

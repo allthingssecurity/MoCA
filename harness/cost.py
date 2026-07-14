@@ -3,9 +3,9 @@
 
 The whole point of this file is one number that is easy to get wrong:
 
-  For arm B, the sidekick runs as an MCP *subprocess* of `claude`. Its tokens do
+  For arm B, the helper runs as an MCP *subprocess* of `claude`. Its tokens do
   NOT appear in `claude -p`'s cost. If you report claude's total_cost_usd for arm
-  B you will see a large, entirely fictional saving. We recover the sidekick's
+  B you will see a large, entirely fictional saving. We recover the helper's
   real usage by joining Codex session logs on `cwd`, which uniquely identifies the
   run that spawned them.
 
@@ -24,7 +24,7 @@ RUNS = ROOT / "runs"
 # Only the experiment's own isolated Codex homes. Deliberately NOT ~/.codex --
 # the user's day-to-day Codex work must never be billed to a run.
 CODEX_SESSION_DIRS = [
-    HARNESS / "codex_home_sidekick" / "sessions",
+    HARNESS / "codex_home_helper" / "sessions",
     HARNESS / "codex_home_solo" / "sessions",
 ]
 PRICING = json.loads((Path(__file__).parent / "pricing.json").read_text())
@@ -67,7 +67,7 @@ def _codex_tokens(u: dict) -> dict:
     Codex reports input_tokens INCLUSIVE of cached_input_tokens; Anthropic reports
     inputTokens and cacheReadInputTokens as disjoint. Storing Codex's raw numbers
     next to Anthropic's makes any `input + cache_read` sum double-count the cached
-    portion -- which it did, overstating sidekick tokens until this was fixed.
+    portion -- which it did, overstating helper tokens until this was fixed.
     """
     cached = u.get("cached_input_tokens", 0)
     return {
@@ -140,9 +140,9 @@ def account_run(ledger_path: Path, codex_idx: dict) -> dict:
             unpriced.append(m)
 
     # --- Codex side, arm B: THE BIT THAT IS EASY TO MISS -----------------------
-    # Sidekick tokens are invisible to claude -p. Recover them via cwd join.
-    sidekick_sessions = codex_idx.get(repo_cwd, [])
-    for s in sidekick_sessions:
+    # Helper tokens are invisible to claude -p. Recover them via cwd join.
+    helper_sessions = codex_idx.get(repo_cwd, [])
+    for s in helper_sessions:
         m = s["model"] or "gpt-5.4-mini"
         u = s["usage"]
         agg = tokens.setdefault(
@@ -162,7 +162,7 @@ def account_run(ledger_path: Path, codex_idx: dict) -> dict:
         "empty_patch": led["empty_patch"],
         "wall_s": round(led.get("wall_s", 0), 1),
         "tokens_by_model": tokens,
-        "sidekick_sessions": len(sidekick_sessions),
+        "helper_sessions": len(helper_sessions),
         "shadow_usd": round(usd, 4),
         "unpriced_models": sorted(set(unpriced)),
         "claude_reported_usd": led.get("claude_cost_usd"),
@@ -185,7 +185,7 @@ def main():
         tin = sum(v["input"] + v["cache_read"] + v["cache_write"]
                   for v in r["tokens_by_model"].values())
         tout = sum(v["output"] for v in r["tokens_by_model"].values())
-        print(f"{r['arm']:24} {r['instance_id']:32} {r['sidekick_sessions']:>3} "
+        print(f"{r['arm']:24} {r['instance_id']:32} {r['helper_sessions']:>3} "
               f"{tin:>8,}/{tout:<8,} {r['shadow_usd']:>9.4f}")
 
     print()

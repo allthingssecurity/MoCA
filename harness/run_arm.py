@@ -34,7 +34,7 @@ HARNESS = Path(__file__).resolve().parent
 TASKS = json.loads((ROOT / "data" / "tasks.json").read_text())
 MIRRORS = ROOT / "data" / "mirrors"
 RUNS = ROOT / "runs"
-SIDEKICK_HOME = HARNESS / "codex_home_sidekick"
+HELPER_HOME = HARNESS / "codex_home_helper"
 SOLO_HOME = HARNESS / "codex_home_solo"
 TIMEOUT_S = 45 * 60
 
@@ -43,13 +43,13 @@ def verify_arm(arm: dict, outdir: Path, ledger: dict) -> None:
     """Refuse to record a run whose Codex model is not the one we pinned.
 
     This exists because it already happened once: mcp-server ignored `-c model=`
-    and quietly ran the sidekick on a frontier model. A wrong-model run that looks
+    and quietly ran the helper on a frontier model. A wrong-model run that looks
     successful is worse than a crash, so we crash.
     """
-    expected = arm["sidekick"] or (arm["model"] if arm["engine"] == "codex" else None)
+    expected = arm["helper"] or (arm["model"] if arm["engine"] == "codex" else None)
     if not expected:
         return
-    home = SIDEKICK_HOME if arm["sidekick"] else SOLO_HOME
+    home = HELPER_HOME if arm["helper"] else SOLO_HOME
     repo_cwd = str(outdir / "repo")
 
     seen = set()
@@ -121,7 +121,7 @@ def run_claude(task, arm, repo: Path, outdir: Path) -> dict:
         "--disallowedTools", *BANNED_CLAUDE_TOOLS,   # GUARD 2
     ]
 
-    if arm["sidekick"]:
+    if arm["helper"]:
         # Mount Codex as an MCP server scoped to this repo. --strict-mcp-config so
         # no ambient MCP servers from the user's global config leak into the arm.
         #
@@ -134,7 +134,7 @@ def run_claude(task, arm, repo: Path, outdir: Path) -> dict:
                 "codex": {
                     "command": "codex",
                     "args": ["mcp-server"],
-                    "env": {"CODEX_HOME": str(SIDEKICK_HOME)},
+                    "env": {"CODEX_HOME": str(HELPER_HOME)},
                 }
             }
         }
@@ -255,10 +255,25 @@ def main():
     arm_names = list(ARMS) if args.arm == "all" else [args.arm]
     tasks = TASKS if args.instance == "all" else [
         t for t in TASKS if t["instance_id"] == args.instance]
+
+    # Only run instances the GOLD patch can actually resolve here. Running an arm
+    # on a broken instance burns hours and produces a guaranteed failure that has
+    # nothing to do with the agent.
+    usable_path = ROOT / "data" / "usable.json"
+    if usable_path.exists():
+        usable = set(json.loads(usable_path.read_text())["usable"])
+        skipped = [t["instance_id"] for t in tasks if t["instance_id"] not in usable]
+        tasks = [t for t in tasks if t["instance_id"] in usable]
+        for s in skipped:
+            print(f"  skip {s}: gold patch cannot resolve it here", flush=True)
+    else:
+        print("  WARNING: no data/usable.json -- run validate_tasks.py first, or you "
+              "will grade arms on instances no agent can pass.", flush=True)
+
     if args.limit:
         tasks = tasks[: args.limit]
     if not tasks:
-        sys.exit(f"no task matching {args.instance!r}")
+        sys.exit(f"no runnable task matching {args.instance!r}")
 
     for task in tasks:
         for arm_name in arm_names:
